@@ -533,6 +533,7 @@ int main() {
 		}
 
 	}
+
 	nScreenHeight = rows;
 	nScreenWidth = columns;
 
@@ -550,7 +551,7 @@ int main() {
 	float fCurrentTime = 0;
 
 	//initialises the player variable
-	Player player(fPlayerX, fPlayerY, fSpeed*3, fBulletFreq, fBulletSpeed, nMaxBulletCount,fBulletLifeTime,1,5);
+	Player player(fPlayerX, fPlayerY, fSpeed, fBulletFreq, fBulletSpeed, nMaxBulletCount,fBulletLifeTime,1,5);
 
 	//initialises the enemy variable
 	
