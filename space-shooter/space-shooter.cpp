@@ -563,8 +563,6 @@ int main() {
 	SwarmManager<EnemyType1> smEnemiesT1(20); //create the array of enemies
 	SwarmManager<EnemyType2> smEnemiesT2(20);
 
-
-
 	bool t = 1;
 
 
@@ -594,7 +592,7 @@ int main() {
 			player.updateBullets(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the bullets
 
 			//level design
-
+			/*
 			if (fCurrentTime > 8 and fCurrentTime< 10 and t) {
 				smEnemiesT1.addMultiple(20, [](EnemyType1* e, int i)
 					{
@@ -621,14 +619,14 @@ int main() {
 						e->set(nScreenWidth - 1, i * 2 + 1, 60, 20 + 0.1 * i, 100); //set the enemy position and speed
 					});
 				t = 0;
-			}
+			}*/
 
 			t = !((int)fCurrentTime - 22) or t;
 
 			if (fCurrentTime > 19 +8 and fCurrentTime < 10 + 19 and t) {
-				smEnemiesT2.addMultiple(20, [](EnemyType1* e, int i)
+				smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
 					{
-						e->set(nScreenWidth - 1, i * 2 + 1, 60, 19+ 8 + 0.1 * i, 100); //set the enemy position and speed
+						e->set(nScreenWidth - 1, i * 2 + 1, 60, 19+ 8 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
 					});
 				t = 0;
 			}
@@ -636,9 +634,9 @@ int main() {
 			t = !((int)fCurrentTime - 10 - 19) or t;
 
 			if (fCurrentTime > 19 + 13 and fCurrentTime < 19 + 15 and t) {
-				smEnemiesT2.addMultiple(20, [](EnemyType1* e, int i)
+				smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
 					{
-						e->set(nScreenWidth - 1, i * 2 + 1, 60, 19 + 15 - 0.1 * i, 100); //set the enemy position and speed
+						e->set(nScreenWidth - 1, i * 2 + 1, 60, 19 + 15 - 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
 					});
 				t = 0;
 			}
@@ -646,9 +644,9 @@ int main() {
 			t = !((int)fCurrentTime - 15 - 19) or t;
 
 			if (fCurrentTime > 19 + 20 and fCurrentTime < 19 + 22 and t) {
-				smEnemiesT2.addMultiple(20, [](EnemyType1* e, int i)
+				smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
 					{
-						e->set(nScreenWidth - 1, i * 2 + 1, 60, 19 + 20 + 0.1 * i, 100); //set the enemy position and speed
+						e->set(nScreenWidth - 1, i * 2 + 1, 60, 19 + 20 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
 					});
 				t = 0;
 			}
