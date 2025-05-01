@@ -202,8 +202,6 @@ public:
 	}
 };
 
-
-
 //Base class for other classes
 class Entity
 {
@@ -511,7 +509,33 @@ public:
 
 };
 
+
 int main() {
+
+	bool config = 1;
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	int columns, rows;
+	char choice;
+
+	while (config) {
+
+		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+		columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+		printf("columns: %d\n", columns);
+		printf("rows: %d\n", rows);
+		
+		cout << "if you want to resize press y else press n \n you can't resize after you press n";
+		cin >> choice;
+		if (choice == 'n') {
+			config = 0;
+		}
+
+	}
+	nScreenHeight = rows;
+	nScreenWidth = columns;
+
 	// Create Screen Buffer
 	wchar_t* screen = new wchar_t[nScreenWidth * nScreenHeight];
 	HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
@@ -529,30 +553,40 @@ int main() {
 	Player player(fPlayerX, fPlayerY, fSpeed, fBulletFreq, fBulletSpeed, nMaxBulletCount,fBulletLifeTime,1,10);
 
 	//initialises the enemy variable
-	/*
+	
 	SwarmManager<EnemyType1> smEnemiesT1(20); //create the array of enemies
 	smEnemiesT1.addMultiple(20, [](EnemyType1* e, int i)
 		{
-			e->set(nScreenWidth-10, i * 2, 60,8+ 0.1*i, 100); //set the enemy position and speed
+			e->set(nScreenWidth-1, i * 2 + 1, 60,8+ 0.1*i , 100); //set the enemy position and speed
 		});
 	SwarmManager<EnemyType1> smEnemiesT12(20); //create the array of enemies
 	smEnemiesT12.addMultiple(20, [](EnemyType1* e, int i)
 		{
-			e->set(nScreenWidth - 10, i * 2, 60, 8+4-0.1 * i, 100); //set the enemy position and speed
+			e->set(nScreenWidth - 1, i * 2, 60, 8+4-0.1 * i, 100); //set the enemy position and speed
 		});
 	SwarmManager<EnemyType1> smEnemiesT13(20); //create the array of enemies
 	smEnemiesT13.addMultiple(20, [](EnemyType1* e, int i)
 		{
-			e->set(nScreenWidth - 10, i * 2, 60, 8+5+ 0.1 * i, 100); //set the enemy position and speed
-		});*/
+			e->set(nScreenWidth - 1, i * 2 + 1, 60, 8+5+ 0.1 * i, 100); //set the enemy position and speed
+		});
 	//EnemyType2 e;
 	//e.set(nScreenWidth-1, 20, 30, 0, 100, 40, 0.3f, 6,2,3,3); //set the enemy position and speed
 
-	SwarmManager<EnemyType2> smEnemiesT2(20); //create the array of enemies
-	smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
+	SwarmManager<EnemyType2> smEnemiesT21(20); //create the array of enemies
+	smEnemiesT21.addMultiple(20, [](EnemyType2* e, int i)
 		{
-			e->set(nScreenWidth - 10, i * 2, 30, 0 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
+			e->set(nScreenWidth - 1, i * 2, 30, 8+5+2 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
 		}); 
+	SwarmManager<EnemyType2> smEnemiesT22(20); //create the array of enemies
+	smEnemiesT22.addMultiple(20, [](EnemyType2* e, int i)
+		{
+			e->set(nScreenWidth - 1, i * 2+1, 30, 8 + 10 + 2 - 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
+		});
+	SwarmManager<EnemyType2> smEnemiesT23(20); //create the array of enemies
+	smEnemiesT23.addMultiple(20, [](EnemyType2* e, int i)
+		{
+			e->set(nScreenWidth - 1, i * 2, 30, 8 + 12 + 2 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
+		});
 
 	int alive = 1;
 	float fDeathTime = 0;
@@ -571,17 +605,21 @@ int main() {
 		ClearScreenDrawBg(nScreenWidth, nScreenHeight, screen);
 
 		if (alive) {
-
+			logScreen(screen, nScreenWidth, "You are the lone suvivor of your fleet", (int)(nScreenWidth/2.4), 20, 0, 0, 4, fCurrentTime);
+			logScreen(screen, nScreenWidth, "But you are not alone.", (int)(nScreenWidth / 2.4), 20, 0, 5, 4, fCurrentTime);
 
 			player.drawGui(nScreenWidth, screen); //draw the player gui
 			player.updateBullets(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the bullets
-			//e.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the enemy
-			smEnemiesT2.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
-			//update enemies
-			//smEnemiesT1.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
-			//smEnemiesT12.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
-			//smEnemiesT13.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
-			//updates the player
+
+			//updates enemies
+			smEnemiesT1.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
+			smEnemiesT12.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
+			smEnemiesT13.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
+			smEnemiesT21.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
+			smEnemiesT22.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
+			smEnemiesT23.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
+
+			//updates player
 			alive = player.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
 
 
@@ -589,7 +627,7 @@ int main() {
 			fDeathTime = fCurrentTime;
 		}
 		else {
-			logScreen(screen, nScreenWidth, "You failed to survive.", 50, 20, 0, fDeathTime, fDeathTime + 10, fCurrentTime);
+			logScreen(screen, nScreenWidth, "You failed to survive.", (int)(nScreenWidth / 2.4), 20, 0, fDeathTime, fDeathTime + 10, fCurrentTime);
 		}
 
 		nFakeUnitAlive = -1000;
