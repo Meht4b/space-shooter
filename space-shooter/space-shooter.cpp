@@ -14,6 +14,8 @@ using namespace std;
 int nScreenWidth = 120;			// Console Screen Size X (columns)
 int nScreenHeight = 40;			// Console Screen Size Y (rows)
 
+
+int nFakeUnitAlive = -1000;
 float fPlayerX = 20.0f;
 float fPlayerY = 20.0f;
 float fSpeed = 40.0f;			// Walking Speed
@@ -127,6 +129,7 @@ class SwarmManager
 	int* nUnitsAlive; //current amount of units on screen
 	int nUnitSwarmCount; //number of units in one swarm
 	float fBulletCooldown; //cooldown of the units bw swarms
+	
 
 public:
 	SwarmManager() {
@@ -136,7 +139,7 @@ public:
 
 	}
 
-	SwarmManager(int maxunit, int* unitsalive,int unitswarmcount, float fbulletcooldown)
+	SwarmManager(int maxunit, int* unitsalive = &nFakeUnitAlive,int unitswarmcount = 100, float fbulletcooldown = 0)
 	{
 		set(maxunit,unitsalive,unitswarmcount,fbulletcooldown);
 	}
@@ -195,8 +198,11 @@ public:
 
 			}
 		}
+		
 	}
 };
+
+
 
 //Base class for other classes
 class Entity
@@ -439,7 +445,7 @@ public:
 		EnemyType1();
 	}
 
-	void set(float posx, float posy, float speed, float bulletspeed, float bulletfreq, float birthtime, float lifetime, int maxbullet, float bulletcooldown, int bulletswarmcount,float bulletlifetime) {
+	void set(float posx, float posy, float speed, float birthtime, float lifetime, float bulletspeed, float bulletfreq, int maxbullet, float bulletcooldown, int bulletswarmcount,float bulletlifetime) {
 
 		fPosX = posx; fPosY = posy;
 		fSpeed = speed;
@@ -539,9 +545,14 @@ int main() {
 		{
 			e->set(nScreenWidth - 10, i * 2, 60, 8+5+ 0.1 * i, 100); //set the enemy position and speed
 		});*/
-	EnemyType2 e;
-	e.set(nScreenWidth-1, 20, 30, 40, 0.3f, 0, 100, 6,2,3,3); //set the enemy position and speed
+	//EnemyType2 e;
+	//e.set(nScreenWidth-1, 20, 30, 0, 100, 40, 0.3f, 6,2,3,3); //set the enemy position and speed
 
+	SwarmManager<EnemyType2> smEnemiesT2(20); //create the array of enemies
+	smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
+		{
+			e->set(nScreenWidth - 10, i * 2, 30, 0 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
+		}); 
 
 	int alive = 1;
 	float fDeathTime = 0;
@@ -560,14 +571,12 @@ int main() {
 		ClearScreenDrawBg(nScreenWidth, nScreenHeight, screen);
 
 		if (alive) {
-			logScreen(screen, nScreenWidth, "You are the lone suvivor of your fleet", 50, 20, 0, 0, 4, fCurrentTime);
-			logScreen(screen, nScreenWidth, "But you are not alone.", 50, 20, 0, 5, 4, fCurrentTime);
-			
+
 
 			player.drawGui(nScreenWidth, screen); //draw the player gui
 			player.updateBullets(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the bullets
-			e.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the enemy
-
+			//e.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the enemy
+			smEnemiesT2.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
 			//update enemies
 			//smEnemiesT1.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
 			//smEnemiesT12.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
@@ -583,7 +592,7 @@ int main() {
 			logScreen(screen, nScreenWidth, "You failed to survive.", 50, 20, 0, fDeathTime, fDeathTime + 10, fCurrentTime);
 		}
 
-
+		nFakeUnitAlive = -1000;
 
 		// Display Frame
 		screen[nScreenWidth * nScreenHeight - 1] = '\0';
