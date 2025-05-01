@@ -108,6 +108,10 @@ class SwarmManager
 	Unit* arrUnit; //array of given units
 	int* arrUnitFree;
 	int nMaxUnit; //max amount of units there can be on screen
+	int* nUnitCount; //current amount of units on screen
+	int nUnitSwarmCount //number of units in one swarm
+	float fBulletCooldown; //cooldown of the units bw swarms
+
 public:
 	SwarmManager() {
 		nMaxUnit = 0;
@@ -118,7 +122,7 @@ public:
 
 	SwarmManager(int maxunit)
 	{
-		set(maxunit);
+		set(maxunit,fBulletCooldown);
 	}
 
 	~SwarmManager()
@@ -127,7 +131,7 @@ public:
 		delete[] arrUnit; //delete the array of units
 	}
 
-	void set(int maxunit) {
+	void set(int maxunit, float fbulletcooldown) {
 
 		delete[] arrUnit;
 		delete[] arrUnitFree;
@@ -139,6 +143,8 @@ public:
 			arrUnitFree[i] = 0; //initialize the array of indices of free units
 		}
 
+		fBulletCooldown = fbulletcooldown;
+		nUnitCount = 0; //initialize the number of units on screen
 	}
 
 	Unit* add() {
@@ -225,7 +231,8 @@ class Player : private Entity
 
 	SwarmManager<Bullet> smBullets; //array of bullets
 	float fPrevBulletSpawnTime; //time of the last bullet spawn
-
+	int* nUnitCount; //current amount of units on screen
+	float* fBulletCooldown; //cooldown of the bullets
 
 public:
 	Player() {
