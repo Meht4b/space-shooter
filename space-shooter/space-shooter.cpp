@@ -19,7 +19,7 @@ float fPlayerY = 20.0f;
 float fSpeed = 40.0f;			// Walking Speed
 float fBulletSpeed = 70.0f;		//bullet speed
 float fBulletFreq = 0.03f;		//bullet frequence in seconds
-int nMaxBulletCount = 10;		//max bullet count 
+int nMaxBulletCount = 100;		//max bullet count 
 float fBulletLifeTime = 3.0f;	//bullet life time in seconds
 
 //function to log to the screen
@@ -63,18 +63,26 @@ class Bullet
 	float fPosX, fPosY, fSpeed;
 	float fBirthTime,fLifeTime;
 	char cShape;
+	int* nBulletsActive; //current amount of units on screen
+	float fCoolDownTime;
+	bool flag;
+
 public:
 	Bullet() {
 		fPosX = 0; fPosY = 0; fSpeed = 0; cShape = ' '; fBirthTime = 0;
 	}
 
-	void set(float posx, float posy, float birthtime,float lifetime, float speed, char shape) {
+	void set(float posx, float posy, float birthtime,float lifetime, float speed, char shape,int* bulletsactive, float cooldowntime) {
 		fPosX = posx;
 		fPosY = posy;
 		fSpeed = speed;
 		cShape = shape;
 		fBirthTime = birthtime;
 		fLifeTime = lifetime;
+		fCoolDownTime = cooldowntime;
+		nBulletsActive = bulletsactive;
+		flag = 0;
+
 	}
 
 	int update(float fElapsedTime, float fCurrentTime, int nScreenWidth, int nScreenHeight, wchar_t* screen) {
@@ -83,11 +91,19 @@ public:
 		//if the bullet is in bounds
 		if (fPosY < nScreenHeight and fPosY>=0 and fPosX < nScreenWidth and fPosX >= 0)		
 		{											
-			draw(nScreenWidth, screen);					//draw the bullet
+			draw(nScreenWidth, screen);						//draw the bullet
 		}
 
-		if (fCurrentTime - fBirthTime > fLifeTime) {	//if the bullets life has ended
-			return 0;									//mark the bullet as free
+		if (fCurrentTime - fBirthTime > fCoolDownTime) {	//if the bullets cooldown has ender
+			if (flag) (*nBulletsActive)--;
+			flag = 0;
+		}
+		else {
+			flag = 1;
+		}
+
+		if (fCurrentTime - fBirthTime > fLifeTime) {		//if the bullets life has ended
+			return 0;										//mark the bullet as free
 		}
 		else
 		{
@@ -108,6 +124,10 @@ class SwarmManager
 	Unit* arrUnit; //array of given units
 	int* arrUnitFree;
 	int nMaxUnit; //max amount of units there can be on screen
+	int* nUnitsAlive; //current amount of units on screen
+	int nUnitSwarmCount; //number of units in one swarm
+	float fBulletCooldown; //cooldown of the units bw swarms
+
 public:
 	SwarmManager() {
 		nMaxUnit = 0;
@@ -116,9 +136,9 @@ public:
 
 	}
 
-	SwarmManager(int maxunit)
+	SwarmManager(int maxunit, int* unitsalive,int unitswarmcount, float fbulletcooldown)
 	{
-		set(maxunit);
+		set(maxunit,unitsalive,unitswarmcount,fbulletcooldown);
 	}
 
 	~SwarmManager()
@@ -127,10 +147,11 @@ public:
 		delete[] arrUnit; //delete the array of units
 	}
 
-	void set(int maxunit) {
+	void set(int maxunit,int* unitsalive,int unitswarmcount,float fbulletcooldown) {
 
 		delete[] arrUnit;
 		delete[] arrUnitFree;
+		
 
 		nMaxUnit = maxunit;
 		arrUnit = new Unit[nMaxUnit]; //create the array of units
@@ -139,12 +160,16 @@ public:
 			arrUnitFree[i] = 0; //initialize the array of indices of free units
 		}
 
+		nUnitSwarmCount = unitswarmcount;
+		fBulletCooldown = fbulletcooldown;
+		nUnitsAlive = unitsalive; //initialize the number of units on screen
 	}
 
 	Unit* add() {
 		for (int i = 0; i < nMaxUnit; i++) {
-			if (arrUnitFree[i] == 0) {
+			if (arrUnitFree[i] == 0 and (*nUnitsAlive)< nUnitSwarmCount) {
 				arrUnitFree[i] = 1; //mark the unit as used
+				(*nUnitsAlive)++;
 				return &arrUnit[i]; //return the unit
 			}
 		}
@@ -225,7 +250,9 @@ class Player : private Entity
 
 	SwarmManager<Bullet> smBullets; //array of bullets
 	float fPrevBulletSpawnTime; //time of the last bullet spawn
-
+	int nBulletActive; //current amount of units on screen
+	float fBulletCooldown; //cooldown of the bullets
+	int nBulletSwarmCount;
 
 public:
 	Player() {
@@ -238,14 +265,16 @@ public:
 		fPrevBulletSpawnTime = 0;
 	}
 
-	Player(float posx, float posy, float speed, float bulletf, float bulletspeed, int maxbullet, float bulletlifetime)
+	Player(float posx, float posy, float speed, float bulletf, float bulletspeed, int maxbullet, float bulletlifetime,float bulletcooldown, int bulletswarmcount)
 	{
 		fPosX = posx; fPosY = posy; fBulletFreq = bulletf; fBulletSpeed = bulletspeed; nMaxBullet = maxbullet;
 		fSpeed = speed;
-		smBullets.set(maxbullet); //create the array of bullets
 		fPrevBulletSpawnTime = 0;
 		fBulletLifeTime = bulletlifetime;
-
+		nBulletActive = 0;
+		fBulletCooldown = bulletcooldown;
+		nBulletSwarmCount = bulletswarmcount;
+		smBullets.set(maxbullet, &nBulletActive, bulletswarmcount,fBulletCooldown); //create the array of bullets
 	}
 
 	void updateBullets(float fElapsedTime, float fCurrentTime, int nScreenWidth, int nScreenHeight, wchar_t* screen) {
@@ -289,7 +318,9 @@ public:
 				if (pBullet != nullptr)
 				{														//if there is a bullet available
 																		//set the bullet position and speed
-					pBullet->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, fBulletSpeed, '-');
+
+					pBullet->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, fBulletSpeed, '-',&nBulletActive,fBulletCooldown);
+
 					fPrevBulletSpawnTime = fCurrentTime;				//reset the prev spawn time
 				}
 			}
@@ -319,6 +350,13 @@ public:
 		screen[(int)fPosY * nScreenWidth + (int)fPosX + 1] = '>';
 		screen[(int)fPosY * nScreenWidth + (int)fPosX - 1] = '=';
 		screen[(int)fPosY * nScreenWidth + (int)fPosX + 2] = 8674;
+
+	}
+
+	void drawGui(int nScreenWidth, wchar_t* screen)
+	{
+		logScreen(screen, nScreenWidth, string(nBulletSwarmCount - nBulletActive, '|'), (int)(nScreenWidth / 2) - (int)(nBulletSwarmCount / 2), 0);
+
 	}
 };
 
@@ -392,23 +430,33 @@ class EnemyType2 : private EnemyType1
 	SwarmManager<Bullet> smBullets; //array of bullets
 	float fPrevBulletSpawnTime; //time of the last bullet spawn
 	Bullet* temp;
+	int nBulletActive; //current amount of units on screen
+	float fBulletCooldown; //cooldown of the bullets
+	int nBulletSwarmCount;
 
 public:
 	EnemyType2() {
 		EnemyType1();
 	}
 
-	void set(float posx, float posy, float speed, float bulletspeed, float bulletfreq, float birthtime, float lifetime, int maxbullet) {
+	void set(float posx, float posy, float speed, float bulletspeed, float bulletfreq, float birthtime, float lifetime, int maxbullet, float bulletcooldown, int bulletswarmcount,float bulletlifetime) {
+
 		fPosX = posx; fPosY = posy;
 		fSpeed = speed;
 		fBirthTime = birthtime; fLifeTime = lifetime;
-
+		fBulletLifeTime = bulletlifetime;
 										//set the position and speed of the enemy
 		fBulletSpeed = bulletspeed; //set the bullet speed
 		fBulletFreq = bulletfreq; //set the bullet frequency
 		nMaxBulletCount = maxbullet; //set the max bullet count
 
-		smBullets.set(3); //create the array of bullets
+		fBulletSpeed = bulletspeed;
+
+		nBulletActive = 0;
+		fBulletCooldown = bulletcooldown;
+		nBulletSwarmCount = bulletswarmcount;
+		smBullets.set(maxbullet, &nBulletActive, bulletswarmcount, fBulletCooldown);
+
 		fPrevBulletSpawnTime = 0; //reset the prev spawn time
 	}
 
@@ -424,7 +472,7 @@ public:
 				logScreen(screen, nScreenWidth, "Enemy is shooting", 50, 20, 0, fCurrentTime, 1, fCurrentTime);
 				temp = smBullets.add(); //add a bullet to the array
 				if (temp) {
-					temp->set(fPosX, fPosY, fCurrentTime, 3	, -20, '~'); //set the bullet position and speed
+					temp->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, -fBulletSpeed, '~',&nBulletActive,fBulletCooldown); //set the bullet position and speed
 					fPrevBulletSpawnTime = fCurrentTime; //reset the prev spawn time
 				}
 				
@@ -472,7 +520,7 @@ int main() {
 	float fCurrentTime = 0;
 
 	//initialises the player variable
-	Player player(fPlayerX, fPlayerY, fSpeed, fBulletFreq, fBulletSpeed, nMaxBulletCount,fBulletLifeTime);
+	Player player(fPlayerX, fPlayerY, fSpeed, fBulletFreq, fBulletSpeed, nMaxBulletCount,fBulletLifeTime,1,10);
 
 	//initialises the enemy variable
 	/*
@@ -492,7 +540,7 @@ int main() {
 			e->set(nScreenWidth - 10, i * 2, 60, 8+5+ 0.1 * i, 100); //set the enemy position and speed
 		});*/
 	EnemyType2 e;
-	e.set(nScreenWidth - 10, 20, 10, 8, 0.3f, 0, 100, 20); //set the enemy position and speed
+	e.set(nScreenWidth-1, 20, 30, 40, 0.3f, 0, 100, 6,2,3,3); //set the enemy position and speed
 
 
 	int alive = 1;
@@ -516,7 +564,7 @@ int main() {
 			logScreen(screen, nScreenWidth, "But you are not alone.", 50, 20, 0, 5, 4, fCurrentTime);
 			
 
-
+			player.drawGui(nScreenWidth, screen); //draw the player gui
 			player.updateBullets(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the bullets
 			e.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the enemy
 
