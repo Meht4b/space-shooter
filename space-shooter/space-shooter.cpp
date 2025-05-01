@@ -46,7 +46,7 @@ void ClearScreen(int nScreenWidth, int nScreenHeight, wchar_t* screen) {
 	}
 }
 
-//function to clear the screen and draw the background
+//function to clear the screen and draw the backgrounds
 void ClearScreenDrawBg(int nScreenWidth, int nScreenHeight, wchar_t* screen) {
 	for (int x = 0; x < nScreenWidth; x++)
 	{
@@ -550,7 +550,7 @@ int main() {
 	float fCurrentTime = 0;
 
 	//initialises the player variable
-	Player player(fPlayerX, fPlayerY, fSpeed, fBulletFreq, fBulletSpeed, nMaxBulletCount,fBulletLifeTime,1,10);
+	Player player(fPlayerX, fPlayerY, fSpeed*3, fBulletFreq, fBulletSpeed, nMaxBulletCount,fBulletLifeTime,1,5);
 
 	//initialises the enemy variable
 	
