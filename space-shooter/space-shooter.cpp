@@ -108,7 +108,7 @@ class SwarmManager
 	Unit* arrUnit; //array of given units
 	int* arrUnitFree;
 	int nMaxUnit; //max amount of units there can be on screen
-	int* nUnitCount; //current amount of units on screen
+	int* nUnitsAlive; //current amount of units on screen
 	int nUnitSwarmCount //number of units in one swarm
 	float fBulletCooldown; //cooldown of the units bw swarms
 
@@ -120,9 +120,9 @@ public:
 
 	}
 
-	SwarmManager(int maxunit)
+	SwarmManager(int maxunit, int* unitsalive, unitswarmcount, float fbulletcooldown)
 	{
-		set(maxunit,fBulletCooldown);
+		set(maxunit,unitsalive,unitsswarmcount,fbulletcooldown);
 	}
 
 	~SwarmManager()
@@ -131,10 +131,11 @@ public:
 		delete[] arrUnit; //delete the array of units
 	}
 
-	void set(int maxunit, float fbulletcooldown) {
+	void set(int maxunit,int* unitsalive, unitswarmcount,float fbulletcooldown) {
 
 		delete[] arrUnit;
 		delete[] arrUnitFree;
+		
 
 		nMaxUnit = maxunit;
 		arrUnit = new Unit[nMaxUnit]; //create the array of units
@@ -143,13 +144,14 @@ public:
 			arrUnitFree[i] = 0; //initialize the array of indices of free units
 		}
 
+		nUnitSwarmCount = nUnitSwarmCount
 		fBulletCooldown = fbulletcooldown;
-		nUnitCount = 0; //initialize the number of units on screen
+		nUnitsAlive = nUnitsAlive; //initialize the number of units on screen
 	}
 
 	Unit* add() {
 		for (int i = 0; i < nMaxUnit; i++) {
-			if (arrUnitFree[i] == 0) {
+			if (arrUnitFree[i] == 0 and *nUnitsAlive < nUnitSwarmCount) {
 				arrUnitFree[i] = 1; //mark the unit as used
 				return &arrUnit[i]; //return the unit
 			}
@@ -231,7 +233,7 @@ class Player : private Entity
 
 	SwarmManager<Bullet> smBullets; //array of bullets
 	float fPrevBulletSpawnTime; //time of the last bullet spawn
-	int* nUnitCount; //current amount of units on screen
+	int nUnitsAlive; //current amount of units on screen
 	float* fBulletCooldown; //cooldown of the bullets
 
 public:
@@ -245,14 +247,15 @@ public:
 		fPrevBulletSpawnTime = 0;
 	}
 
-	Player(float posx, float posy, float speed, float bulletf, float bulletspeed, int maxbullet, float bulletlifetime)
+	Player(float posx, float posy, float speed, float bulletf, float bulletspeed, int maxbullet, float bulletlifetime,float bulletcooldown)
 	{
 		fPosX = posx; fPosY = posy; fBulletFreq = bulletf; fBulletSpeed = bulletspeed; nMaxBullet = maxbullet;
 		fSpeed = speed;
-		smBullets.set(maxbullet); //create the array of bullets
+		smBullets.set(maxbullet,); //create the array of bullets
 		fPrevBulletSpawnTime = 0;
 		fBulletLifeTime = bulletlifetime;
-
+		nUnitsAlive = 0;
+		fBulletCooldown = bulletcooldown;
 	}
 
 	void updateBullets(float fElapsedTime, float fCurrentTime, int nScreenWidth, int nScreenHeight, wchar_t* screen) {
@@ -296,7 +299,9 @@ public:
 				if (pBullet != nullptr)
 				{														//if there is a bullet available
 																		//set the bullet position and speed
-					pBullet->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, fBulletSpeed, '-');
+
+					pBullet->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, fBulletSpeed, '-',&nUnitsAlive);
+
 					fPrevBulletSpawnTime = fCurrentTime;				//reset the prev spawn time
 				}
 			}
