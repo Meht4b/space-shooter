@@ -63,18 +63,23 @@ class Bullet
 	float fPosX, fPosY, fSpeed;
 	float fBirthTime,fLifeTime;
 	char cShape;
+	int* nBulletsAlive; //current amount of units on screen
+	float fCoolDownTime;
+
 public:
 	Bullet() {
 		fPosX = 0; fPosY = 0; fSpeed = 0; cShape = ' '; fBirthTime = 0;
 	}
 
-	void set(float posx, float posy, float birthtime,float lifetime, float speed, char shape) {
+	void set(float posx, float posy, float birthtime,float lifetime, float speed, char shape,int* bulletsalive, float cooldowntime) {
 		fPosX = posx;
 		fPosY = posy;
 		fSpeed = speed;
 		cShape = shape;
 		fBirthTime = birthtime;
 		fLifeTime = lifetime;
+		fCoolDownTime = cooldowntime;
+		nBulletsAlive = bulletsalive; 
 	}
 
 	int update(float fElapsedTime, float fCurrentTime, int nScreenWidth, int nScreenHeight, wchar_t* screen) {
@@ -83,11 +88,15 @@ public:
 		//if the bullet is in bounds
 		if (fPosY < nScreenHeight and fPosY>=0 and fPosX < nScreenWidth and fPosX >= 0)		
 		{											
-			draw(nScreenWidth, screen);					//draw the bullet
+			draw(nScreenWidth, screen);						//draw the bullet
 		}
 
-		if (fCurrentTime - fBirthTime > fLifeTime) {	//if the bullets life has ended
-			return 0;									//mark the bullet as free
+		if (fCurrentTime - fBirthTime > fCoolDownTime) {	//if the bullets life has ended
+			*nBulletsAlive--;								//mark the bullet as free
+		}
+
+		if (fCurrentTime - fBirthTime > fLifeTime) {		//if the bullets life has ended
+			return 0;										//mark the bullet as free
 		}
 		else
 		{
@@ -120,7 +129,7 @@ public:
 
 	}
 
-	SwarmManager(int maxunit, int* unitsalive, unitswarmcount, float fbulletcooldown)
+	SwarmManager(int maxunit, int* unitsalive,int unitswarmcount, float fbulletcooldown)
 	{
 		set(maxunit,unitsalive,unitsswarmcount,fbulletcooldown);
 	}
@@ -131,7 +140,7 @@ public:
 		delete[] arrUnit; //delete the array of units
 	}
 
-	void set(int maxunit,int* unitsalive, unitswarmcount,float fbulletcooldown) {
+	void set(int maxunit,int* unitsalive,int unitswarmcount,float fbulletcooldown) {
 
 		delete[] arrUnit;
 		delete[] arrUnitFree;
@@ -144,9 +153,9 @@ public:
 			arrUnitFree[i] = 0; //initialize the array of indices of free units
 		}
 
-		nUnitSwarmCount = nUnitSwarmCount
+		nUnitSwarmCount = unitswarmcount;
 		fBulletCooldown = fbulletcooldown;
-		nUnitsAlive = nUnitsAlive; //initialize the number of units on screen
+		nUnitsAlive = unitsalive; //initialize the number of units on screen
 	}
 
 	Unit* add() {
@@ -247,14 +256,14 @@ public:
 		fPrevBulletSpawnTime = 0;
 	}
 
-	Player(float posx, float posy, float speed, float bulletf, float bulletspeed, int maxbullet, float bulletlifetime,float bulletcooldown)
+	Player(float posx, float posy, float speed, float bulletf, float bulletspeed, int maxbullet, float bulletlifetime,float bulletcooldown, int bulletswarmcount)
 	{
 		fPosX = posx; fPosY = posy; fBulletFreq = bulletf; fBulletSpeed = bulletspeed; nMaxBullet = maxbullet;
 		fSpeed = speed;
-		smBullets.set(maxbullet,); //create the array of bullets
+		smBullets.set(maxbullet, &nBulletsActive, bulletswarmcount); //create the array of bullets
 		fPrevBulletSpawnTime = 0;
 		fBulletLifeTime = bulletlifetime;
-		nUnitsAlive = 0;
+		*nBulletActive = 0;
 		fBulletCooldown = bulletcooldown;
 	}
 
