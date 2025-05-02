@@ -525,6 +525,71 @@ public:
 
 };
 
+void Level1(float fCurrentTime, bool &t, SwarmManager<EnemyType1>& smEnemiesT1, SwarmManager<EnemyType2>& smEnemiesT2) {
+
+	if (fCurrentTime > 8 and fCurrentTime < 10 and t) {
+		smEnemiesT1.addMultiple(20, [](EnemyType1* e, int i)
+			{
+				e->set(nScreenWidth - 1, i * 2 + 1, 60, 8 + 0.1 * i, 100); //set the enemy position and speed
+			});
+		t = 0;
+	}
+
+	t = !((int)fCurrentTime - 10) or t;
+
+	if (fCurrentTime > 13 and fCurrentTime < 15 and t) {
+		smEnemiesT1.addMultiple(20, [](EnemyType1* e, int i)
+			{
+				e->set(nScreenWidth - 1, i * 2 + 1, 60, 15 - 0.1 * i, 100); //set the enemy position and speed
+			});
+		t = 0;
+	}
+
+	t = !((int)fCurrentTime - 15) or t;
+
+	if (fCurrentTime > 20 and fCurrentTime < 22 and t) {
+		smEnemiesT1.addMultiple(20, [](EnemyType1* e, int i)
+			{
+				e->set(nScreenWidth - 1, i * 2 + 1, 60, 20 + 0.1 * i, 100); //set the enemy position and speed
+			});
+		t = 0;
+	}
+
+	t = !((int)fCurrentTime - 22) or t;
+
+	if (fCurrentTime > 19 + 8 and fCurrentTime < 10 + 19 and t) {
+		smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
+			{
+				e->set(nScreenWidth - 1, i * 2 + 1, 30, 19 + 8 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
+			});
+		t = 0;
+	}
+
+	t = !((int)fCurrentTime - 10 - 19) or t;
+
+	if (fCurrentTime > 19 + 15 and fCurrentTime < 19 + 17 and t) {
+		smEnemiesT2.freeAllUnits();
+		smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
+			{
+				e->set(nScreenWidth - 1, i * 2 + 1, 30, 19 + 15 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
+			});
+		t = 0;
+	}
+
+	t = !((int)fCurrentTime - 17 - 19) or t;
+
+	if (fCurrentTime > 19 + 22 and fCurrentTime < 19 + 24 and t) {
+		smEnemiesT2.freeAllUnits();
+		smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
+			{
+				e->set(nScreenWidth - 1, i * 2 + 1, 30, 19 + 20 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
+			});
+		t = 0;
+	}
+	t = !((int)fCurrentTime - 24 - 19) or t;
+
+
+}
 
 int main() {
 
@@ -598,72 +663,14 @@ int main() {
 			logScreen(screen, nScreenWidth, "You are the lone suvivor of your fleet", (int)(nScreenWidth/2.4), 20, 0, 0, 4, fCurrentTime);
 			logScreen(screen, nScreenWidth, "But you are not alone.", (int)(nScreenWidth / 2.4), 20, 0, 5, 4, fCurrentTime);
 
-			player.drawGui(nScreenWidth, screen); //draw the player gui
-			player.updateBullets(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the bullets
 
 			//level design
+			Level1(fCurrentTime, t, smEnemiesT1, smEnemiesT2); //call the level function
 			
-			if (fCurrentTime > 8 and fCurrentTime< 10 and t) {
-				smEnemiesT1.addMultiple(20, [](EnemyType1* e, int i)
-					{
-						e->set(nScreenWidth - 1, i * 2 + 1, 60, 8 + 0.1 * i, 100); //set the enemy position and speed
-					});
-				t = 0;
-			}
+			//updates the screen
 
-			t = !((int)fCurrentTime - 10) or t;
-
-			if (fCurrentTime > 13 and fCurrentTime < 15 and t) {
-				smEnemiesT1.addMultiple(20, [](EnemyType1* e, int i)
-					{
-						e->set(nScreenWidth - 1, i * 2 + 1, 60, 15 - 0.1 * i, 100); //set the enemy position and speed
-					});
-				t = 0;
-			}
-
-			t = !((int)fCurrentTime - 15) or t;
-
-			if (fCurrentTime > 20 and fCurrentTime < 22 and t) {
-				smEnemiesT1.addMultiple(20, [](EnemyType1* e, int i)
-					{
-						e->set(nScreenWidth - 1, i * 2 + 1, 60, 20 + 0.1 * i, 100); //set the enemy position and speed
-					});
-				t = 0;
-			}
-
-			t = !((int)fCurrentTime - 22) or t;
-
-			if (fCurrentTime > 19 +8 and fCurrentTime < 10 + 19 and t) {
-				smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
-					{
-						e->set(nScreenWidth - 1, i * 2 + 1, 30, 19+ 8 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
-					});
-				t = 0;
-			}
-
-			t = !((int)fCurrentTime - 10 - 19) or t;
-
-			if (fCurrentTime > 19 + 15 and fCurrentTime < 19 + 17 and t) {
-				smEnemiesT2.freeAllUnits();
-				smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
-					{
-						e->set(nScreenWidth - 1, i * 2 + 1, 30, 19 + 15 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
-					});
-				t = 0;
-			}
-
-			t = !((int)fCurrentTime - 17 - 19) or t;
-
-			if (fCurrentTime > 19 + 22 and fCurrentTime < 19 + 24 and t) {
-				smEnemiesT2.freeAllUnits();
-				smEnemiesT2.addMultiple(20, [](EnemyType2* e, int i)
-					{
-						e->set(nScreenWidth - 1, i * 2 + 1, 30, 19 + 20 + 0.1 * i, 100, 50, 0.3f, 6, 2, 3, 3); //set the enemy position and speed
-					});
-				t = 0;
-			}
-			t = !((int)fCurrentTime - 24 - 19) or t;
-
+			player.drawGui(nScreenWidth, screen); //draw the player gui
+			player.updateBullets(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the bullets
 
 
 			//updates enemies
