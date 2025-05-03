@@ -16,6 +16,12 @@ int nScreenHeight = 40;			// Console Screen Size Y (rows)
 
 
 int nFakeUnitAlive = -1000;
+int bgParticleCount = 0;
+int bgParticeSwarmMaxCount = 5;
+int bgParticleSpeed = -200;
+int bgParticeMaxCount = 40;
+float bgParticleCoolDown = 1;
+
 float fPlayerX = 20.0f;
 float fPlayerY = 20.0f;
 float fSpeed = 40.0f;			// Walking Speed
@@ -62,7 +68,7 @@ void ClearScreenDrawBg(int nScreenWidth, int nScreenHeight, wchar_t* screen) {
 //Bullet class
 class Bullet
 {
-	float fPosX, fPosY, fSpeed;
+	float fPosX, fPosY, fSpeedX,fSpeedY;
 	float fBirthTime,fLifeTime;
 	char cShape;
 	int* nBulletsActive; //current amount of units on screen
@@ -74,10 +80,11 @@ public:
 		fPosX = 0; fPosY = 0; fSpeed = 0; cShape = ' '; fBirthTime = 0;
 	}
 
-	void set(float posx, float posy, float birthtime,float lifetime, float speed, char shape,int* bulletsactive, float cooldowntime) {
+	void set(float posx, float posy, float birthtime,float lifetime, float speedx,float speedy, char shape,int* bulletsactive, float cooldowntime) {
 		fPosX = posx;
 		fPosY = posy;
-		fSpeed = speed;
+		fSpeedX = speedx;
+		fSpeedY = speedy;
 		cShape = shape;
 		fBirthTime = birthtime;
 		fLifeTime = lifetime;
@@ -88,29 +95,29 @@ public:
 	}
 
 	int update(float fElapsedTime, float fCurrentTime, int nScreenWidth, int nScreenHeight, wchar_t* screen) {
-		fPosX += fSpeed * fElapsedTime;					//move the bullet sideways
+		if (fCurrentTime > fBirthTime) {
 
-		//if the bullet is in bounds
-		if (fPosY < nScreenHeight and fPosY>=0 and fPosX < nScreenWidth and fPosX >= 0)		
-		{											
-			draw(nScreenWidth, screen);						//draw the bullet
-		}
+			fPosX += fSpeedX * fElapsedTime;					//move the bullet sideways
+			fPosY += fSpeedY * fElapsedTime;
 
-		if (fCurrentTime - fBirthTime > fCoolDownTime) {	//if the bullets cooldown has ender
-			if (flag) (*nBulletsActive)--;
-			flag = 0;
-		}
-		else {
-			flag = 1;
-		}
+			//if the bullet is in bounds
+			if (fPosY < nScreenHeight and fPosY >= 0 and fPosX < nScreenWidth and fPosX >= 0)
+			{
+				draw(nScreenWidth, screen);						//draw the bullet
+			}
 
-		if (fCurrentTime - fBirthTime > fLifeTime) {		//if the bullets life has ended
-			return 0;										//mark the bullet as free
-		}
-		else
-		{
-			return 1;									//mark the bullet as used
-		}
+			if (fCurrentTime - fBirthTime > fCoolDownTime) {	//if the bullets cooldown has ender
+				if (flag) (*nBulletsActive)--;
+				flag = 0;
+			}
+			else {
+				flag = 1;
+			}
+
+			if (fCurrentTime - fBirthTime > fLifeTime) {		//if the bullets life has ended
+				return 0;										//mark the bullet as free
+			}
+		} return 1;
 	}
 
 	void draw(int nScreenWidth, wchar_t* screen) {
@@ -331,7 +338,7 @@ public:
 				{														//if there is a bullet available
 																		//set the bullet position and speed
 
-					pBullet->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, fBulletSpeed, '-',&nBulletActive,fBulletCooldown);
+					pBullet->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, fBulletSpeed,0 ,'-',&nBulletActive,fBulletCooldown);
 
 					fPrevBulletSpawnTime = fCurrentTime;				//reset the prev spawn time
 				}
@@ -489,10 +496,10 @@ public:
 			fPosX -= fSpeed * fElapsedTime;					//move the enemy left
 			
 			if (fCurrentTime - fPrevBulletSpawnTime > fBulletFreq	) {
-				logScreen(screen, nScreenWidth, "Enemy is shooting", 50, 20, 0, fCurrentTime, 1, fCurrentTime);
+
 				temp = smBullets.add(); //add a bullet to the array
 				if (temp) {
-					temp->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, -fBulletSpeed, '~',&nBulletActive,fBulletCooldown); //set the bullet position and speed
+					temp->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, -fBulletSpeed, 10,'~',&nBulletActive,fBulletCooldown); //set the bullet position and speed
 					fPrevBulletSpawnTime = fCurrentTime; //reset the prev spawn time
 				}
 				
@@ -524,6 +531,14 @@ public:
 	}
 
 };
+
+//Boss class 1
+class Boss1 : private Entity
+{
+
+
+};
+
 
 //first level
 bool Level1(float fCurrentTime, bool &t, SwarmManager<EnemyType1>& smEnemiesT1, SwarmManager<EnemyType2>& smEnemiesT2) {
@@ -601,6 +616,7 @@ bool Level1(float fCurrentTime, bool &t, SwarmManager<EnemyType1>& smEnemiesT1, 
 
 }
 
+
 int main() {
 
 	bool config = 1;
@@ -641,12 +657,24 @@ int main() {
 	float fCurrentTime = 0;
 
 	//initialises the player variable
-	Player player(fPlayerX, fPlayerY, fSpeed, fBulletFreq, fBulletSpeed, nMaxBulletCount,fBulletLifeTime,2,10);
+	Player player(fPlayerX, fPlayerY, fSpeed, fBulletFreq, fBulletSpeed, nMaxBulletCount,fBulletLifeTime,2,5);
 
 	//initialises the enemy variable
 	
 	SwarmManager<EnemyType1> smEnemiesT1(20); //create the array of enemies
 	SwarmManager<EnemyType2> smEnemiesT2(20);
+
+	//background particle
+
+	SwarmManager<Bullet> smBackgroundParticles(bgParticeMaxCount,&bgParticleCount,bgParticeSwarmMaxCount,bgParticleCoolDown);
+	Bullet* temp;
+	
+	smBackgroundParticles.addMultiple(bgParticeSwarmMaxCount, [](Bullet* e, int i)
+		{
+			e->set(nScreenWidth - 1, i * 2 + 1, 0.1 * (rand() % 10), 4, bgParticleSpeed,0,'.', & bgParticleCount, bgParticleCoolDown);
+		});
+	
+	
 
 	bool t = 1;
 	bool level1 = 1;
@@ -672,7 +700,7 @@ int main() {
 		if (alive) {
 			logScreen(screen, nScreenWidth, "You are the lone suvivor of your fleet", (int)(nScreenWidth/2.4), 20, 0, 0, 4, fCurrentTime);
 			logScreen(screen, nScreenWidth, "But you are not alone.", (int)(nScreenWidth / 2.4), 20, 0, 5, 4, fCurrentTime);
-
+			logScreen(screen, nScreenWidth, "use WSAD to move and Space to shoot", (int)(nScreenWidth / 2.4), nScreenHeight-1, 0, 0, 4, fCurrentTime);
 
 			//levels
 			if (level1) {
@@ -681,8 +709,14 @@ int main() {
 
 			}
 			
-			//updates the screen
+			temp = smBackgroundParticles.add();
+			if (temp) {
+				temp->set(nScreenWidth-1, rand() % nScreenHeight - 1, fCurrentTime + 0.1*(rand() % 10), 3, bgParticleSpeed, 0,'.', &bgParticleCount, bgParticleCoolDown); //add a background particle
+			}
 
+			
+			//updates the screen
+			smBackgroundParticles.update(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen);
 			player.drawGui(nScreenWidth, screen); //draw the player gui
 			player.updateBullets(fElapsedTime, fCurrentTime, nScreenWidth, nScreenHeight, screen); //update the bullets
 
