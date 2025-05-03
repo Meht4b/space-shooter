@@ -499,7 +499,7 @@ public:
 
 				temp = smBullets.add(); //add a bullet to the array
 				if (temp) {
-					temp->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, -fBulletSpeed, 10,'~',&nBulletActive,fBulletCooldown); //set the bullet position and speed
+					temp->set(fPosX, fPosY, fCurrentTime, fBulletLifeTime, -fBulletSpeed, 0,'~',&nBulletActive,fBulletCooldown); //set the bullet position and speed
 					fPrevBulletSpawnTime = fCurrentTime; //reset the prev spawn time
 				}
 				
